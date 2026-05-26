@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校车时间查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background-color: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+            margin-right: 10px;
+            color: #1abc9c;
+        }
+
+        .time-display {
+            font-size: 16px;
+            margin-top: 10px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .schedule-type {
+            font-size: 14px;
+            margin-top: 5px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .schedule-type.workday {
+            background: #2ecc71;
+        }
+
+        .schedule-type.holiday {
+            background: #e74c3c;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background-color: #34495e;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .nav-tab-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .nav-tab.active {
+            background-color: #1abc9c;
+            box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 500px;
+            background-color: #f9f9f9;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-title-text {
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title-icon {
+            margin-right: 10px;
+            color: #1abc9c;
+        }
+
+        .schedule-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .schedule-option {
+            flex: 1;
+            text-align: center;
+            padding: 8px 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 12px;
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .schedule-option:hover {
+            background-color: #d5dbdb;
+        }
+
+        .schedule-option.active {
+            background-color: #1abc9c;
+            color: white;
+            box-shadow: 0 4px 8px rgba(26, 188, 156, 0.3);
+        }
+
+        .schedule-option.workday.active {
+            background-color: #2ecc71;
+            border-color: #27ae60;
+        }
+
+        .schedule-option.holiday.active {
+            background-color: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        .route-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #1abc9c;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+
+        .route-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .route-status {
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .route-status.arriving {
+            background-color: #2ecc71;
+        }
+
+        .route-status.waiting {
+            background-color: #f39c12;
+        }
+
+        .route-status.departed {
+            background-color: #95a5a6;
+        }
+
+        .route-status.finished {
+            background-color: #7f8c8d;
+        }
+
+        .direction-section {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #b1b1b1;
+        }
+
+        .direction-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .direction-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .direction-route {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .route-stops {
+            font-size: 15px;
+        }
+
+
+
+        .stop-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #1abc9c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .stop-time {
+            flex: 1;
+            text-align: right;
+            color: #1abc9c;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .peak-time {
+            color: #FF8C00;
+            position: relative;
+        }
+
+        .peak-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #e74c3c, #f39c12);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+
+        .countdown {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: linear-gradient(to right, #1abc9c, #16a085);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 188, 156, 0.4);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        .current-time {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .countdown-timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #e74c3c;
+        }
+
+        .bus-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .bus-option {
+            text-align: center;
+            padding: 12px 5px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .bus-option:hover {
+            background-color: #d5dbdb;
+        }
+
+        .bus-option.active {
+            background-color: #1abc9c;
+            color: white;
+            box-shadow: 0 4px 8px rgba(26, 188, 156, 0.3);
+        }
+
+        .all-buses {
+            margin-top: 25px;
+        }
+
+        .next-bus-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .next-bus-item:last-child {
+            border-bottom: none;
+        }
+
+        .route-color-1 {
+            border-left-color: #1abc9c;
+        }
+
+        .route-color-2 {
+            border-left-color: #3498db;
+        }
+
+        .route-color-3 {
+            border-left-color: #9b59b6;
+        }
+
+        .route-color-4 {
+            border-left-color: #e74c3c;
+        }
+
+        .route-color-5 {
+            border-left-color: #f39c12;
+        }
+
+        .seconds-count {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+
+        .time-detail {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 3px;
+        }
+
+        .direction-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .direction-status.arriving {
+            background-color: #2ecc71;
+        }
+
+        .direction-status.waiting {
+            background-color: #f39c12;
+        }
+
+        .direction-status.finished {
+            background-color: #7f8c8d;
+        }
+
+        .schedule-notice {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .schedule-notice.workday-mode {
+            background-color: #e8f5e9; /* 浅绿色背景 */
+            border-left-color: #4caf50; /* 绿色边框 */
+            color: #2e7d32; /* 深绿色文字 */
+        }
+
+        /* 节假日样式 - 浅红色 */
+        .schedule-notice.holiday-mode {
+            background-color: #ffebee; /* 浅红色背景 */
+            border-left-color: #f44336; /* 红色边框 */
+            color: #c62828; /* 深红色文字 */
+        }
+        .manual-mode {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .peak-notice {
+            text-align: center;
+            padding: 8px;
+            background: #ffeaa7;
+            border: 1px solid #fdcb6e;
+            border-radius: 6px;
+            margin: 8px 0;
+            color: #856404;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .time-notice1 {
+            text-align: center;
+            padding: 14px;
+            background: #a7dcff;
+            border: 1px solid #6ebdfd;
+            border-radius: 6px;
+            margin: 8px 0;
+            color: #032453;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .time-notice2 {
+            text-align: center;
+            padding: 8px;
+            background: #a7dcff;
+            border: 1px solid #6ebdfd;
+            border-radius: 6px;
+            margin: 8px 0;
+            color: #032453;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .stop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stop-name {
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .stop-times-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            justify-content: end;
+            flex-grow: 1;
+            max-width: 300px; /* 根据实际需要调整 */
+        }
+
+        .time-bubble {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #1abc9c;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            text-align: center;
+            min-width: 50px;
+        }
+
+        /* 响应式设计：在小屏幕上减少每行的时间数量 */
+        @media (max-width: 480px) {
+            .stop-times-container {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 220px;
+            }
+            
+            .stop-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .stop-times-container {
+                justify-content: start;
+                max-width: 100%;
+            }
+        }
+
+        .schedule-filter {
+          display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-option {
+           text-align: center;
+            padding: 12px 5px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .filter-option:hover {
+            background-color: #d5dbdb;
+        }
+
+        .filter-option.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+
+        .filter-section {
+            margin-bottom: 15px;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚌</div>
+                <h1>校车时间查询系统</h1>
+            </div>
+            <div class="time-display" id="currentTime">2023年11月15日 星期三 10:30:45</div>
+            <!-- <div class="schedule-type" id="scheduleType">工作日时刻表</div> -->
+        </header>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-page="home">
+                <div class="nav-tab-icon">🏠</div>
+                <span>首页</span>
+            </div>
+            <div class="nav-tab" data-page="schedule">
+                <div class="nav-tab-icon">🕒</div>
+                <span>时刻表</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 首页 -->
+            <div class="page active" id="home">
+                <div class="page-title">
+                    <div class="page-title-text">
+                        <div class="page-title-icon">🚍</div>
+                        <span>校车查询</span>
+                    </div>
+                    <div class="schedule-selector" id="homeScheduleSelector">
+                        <div class="schedule-option workday active" data-schedule="auto">自动</div>
+                        <div class="schedule-option workday" data-schedule="workday">工作日</div>
+                        <div class="schedule-option holiday" data-schedule="holiday">节假日</div>
+                    </div>
+                </div>
+
+                <div class="current-time" id="currentTimeDisplay"></div>
+
+                <div class="schedule-notice" id="scheduleNotice">
+                    <!-- 动态显示时刻表类型提示 -->
+                </div>
+
+                <div class="bus-selector">
+                    <div class="bus-option active" data-bus="all">全部校车</div>
+                    <div class="bus-option" data-bus="1">校内接驳车</div>
+                    <div class="bus-option" data-bus="2">无线谷1号线</div>
+                    <div class="bus-option" data-bus="3">无线谷2号线</div>
+                    <div class="bus-option" data-bus="4">兰台1号线</div>
+                    <div class="bus-option" data-bus="5">兰台2号线</div>
+                </div>
+
+                <div id="nextBusInfo">
+                    <!-- 动态生成班车信息 -->
+                </div>
+
+                <button class="btn" id="refreshBtn">刷新</button>
+            </div>
+
+            <!-- 班车时刻页 -->
+            <div class="page" id="schedule">
+                <div class="page-title">
+                    <div class="page-title-text">
+                        <div class="page-title-icon">🛣️</div>
+                        <span>校车时刻表</span>
+                    </div>
+                    <div class="schedule-selector" id="schedulePageSelector">
+                        <div class="schedule-option workday active" data-schedule="auto">自动</div>
+                        <div class="schedule-option workday" data-schedule="workday">工作日</div>
+                        <div class="schedule-option holiday" data-schedule="holiday">节假日</div>
+                    </div>
+                </div>
+
+                <div class="schedule-notice" id="scheduleTableNotice">
+                    <!-- 动态显示时刻表类型提示 -->
+                </div>
+                <!-- 时刻表筛选器 -->
+                <div class="filter-section">
+                    <div class="filter-title">筛选线路：</div>
+                    <div class="schedule-filter">
+                        <div class="filter-option active" data-filter="all">全部线路</div>
+                        <div class="filter-option" data-filter="1">校内接驳车</div>
+                        <div class="filter-option" data-filter="2">无线谷1号线</div>
+                        <div class="filter-option" data-filter="3">无线谷2号线</div>
+                        <div class="filter-option" data-filter="4">兰台1号线</div>
+                        <div class="filter-option" data-filter="5">兰台2号线</div>
+                    </div>
+                </div>
+
+                <div id="scheduleList">
+                    <!-- 动态生成班车时刻表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // 高峰期时间定义
+        const peakHours = {
+            workday: ["09:20","09:30","09:40","09:50","11:30","11:40","11:50","13:20","13:30","15:20","15:30","15:40","15:50"],
+            holiday: []
+        };
+
+        const peakHours2 = {
+            workday: ["09:30","09:40","09:50","10:00","11:40","11:50","12:00","13:30","13:40","15:30","15:40","15:50","16:00"],
+            holiday: []
+        };
+
+        // 判断是否为高峰期
+        function isPeakTime(time, dirname,scheduleType) {
+
+            if(dirname==="图书馆北 → 东北门"){
+                peakTimes = peakHours[scheduleType];
+            }
+            else{
+                peakTimes = peakHours2[scheduleType];
+            }
+
+            return peakTimes.includes(time);
+        }
+
+        // 工作日班车数据
+        const workdayBusData = {
+            "1": {
+                name: "校内接驳车",
+                directions: {
+                    "AtoB": {
+                        name: "图书馆北 → 东北门",
+                        stops: [
+                            { name: "图书馆北", times: ["07:00", "07:10", "07:20", "07:30", "07:40", "07:45", "07:50", "07:55",
+                                                    "08:00", "08:05", "08:10", "08:15", "08:20", "08:25", "08:30", "08:35",
+                                                    "08:40", "08:45", "08:50", "08:55", "09:00", "09:10", "09:20", "09:30",
+                                                    "09:40", "09:50", "10:00", "10:30", "11:00", "11:30", "11:40", "11:50",
+                                                    "12:00", "12:10", "12:20", "12:30", "12:40", "12:50", "13:00", "13:10",
+                                                    "13:20", "13:30", "14:00", "15:00", "15:10", "15:20", "15:30", "15:40",
+                                                    "15:50", "16:00", "16:50", "16:55", "17:00", "17:05", "17:10", "17:20",
+                                                    "17:30", "17:40", "17:50", "18:00", "18:10", "18:20", "18:30", "19:00",
+                                                    "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "东北门 → 图书馆北",
+                        stops: [
+                            { name: "东北门", times: ["07:10", "07:20", "07:30", "07:40", "07:50", "07:55", "08:00", "08:05",
+                                                    "08:10", "08:15", "08:20", "08:25", "08:30", "08:35", "08:40", "08:45",
+                                                    "08:50", "08:55", "09:00", "09:05", "09:10", "09:20", "09:30", "09:40",
+                                                    "09:50", "10:00", "10:10", "10:40", "11:10", "11:40", "11:50", "12:00",
+                                                    "12:10", "12:20", "12:30", "12:40", "12:50", "13:00", "13:10", "13:20",
+                                                    "13:30", "13:40", "14:10", "15:10", "15:20", "15:30", "15:40", "15:50",
+                                                    "16:00", "16:10", "17:00", "17:05", "17:10", "17:15", "17:20", "17:30",
+                                                    "17:40", "17:50", "17:60", "18:10", "18:20", "18:30", "18:40", "19:10",
+                                                    "19:40", "20:10", "20:40", "21:10", "21:40", "22:10", "22:40", "23:10"]  }
+                        ]
+                    }
+                }
+            },
+            "2": {
+                name: "无线谷1号线",
+                directions: {
+                    "AtoB": {
+                        name: "橘园 → 无线谷",
+                        stops: [
+                            { name: "橘园", times: ["08:00", "08:20", "08:40", "09:00", "09:10", "09:20", "09:30", "09:40", "09:55", "11:00",
+                                                    "11:20", "11:30", "11:40", "11:50", "12:00", "12:20", "12:30", "13:30", "13:40", "13:50", 
+                                                    "14:00", "15:20", "15:40", "16:00", "16:30", "16:50", "17:10", "17:20", "17:30", "17:50", 
+                                                    "18:00", "18:20", "19:50", "20:50"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "无线谷 → 橘园",
+                        stops: [
+                            { name: "无线谷", times: ["08:10", "08:30", "08:50", "09:10", "09:20", "09:30", "09:40", "09:50", "10:05", "11:10",
+                                                    "11:30", "11:40", "11:50", "12:00", "12:10", "12:30", "12:40", "13:40", "13:50", "14:00", 
+                                                    "14:10", "15:30", "15:50", "16:10", "16:40", "17:00", "17:20", "17:30", "17:40", "18:00", 
+                                                    "18:10", "18:30", "20:00", "21:00", "21:30", "22:10"] }
+                        ]
+                    }
+                }
+            },
+            "3": {
+                name: "无线谷2号线",
+                directions: {
+                    "AtoB": {
+                        name: "北门转盘 → 无线谷",
+                        stops: [
+                            { name: "北门转盘", times: ["08:30","09:30", "13:30"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "无线谷 → 北门转盘",
+                        stops: [
+                            { name: "无线谷", times: ["11:50", "17:30", "21:00", "21:30", "22:10"] }
+                        ]
+                    }
+                }
+            },
+            "4": {
+                name: "兰台1号线",
+                directions: {
+                    "AtoB": {
+                        name: "兰台 → 北门转盘",
+                        stops: [
+                            { name: "兰台", times: ["10:00", "10:30", "11:00", "11:20", "11:40", "11:55", "12:10", "12:20", "12:40", "12:50",
+                                                    "13:05", "13:20", "14:00", "14:20", "14:40", "15:00", "15:20", "15:40", "16:00", "16:30", "16:50", "17:10", 
+                                                    "17:20", "17:40", "17:50", "18:00", "18:20", "18:30", "18:40", "18:50", "19:10", "19:30", 
+                                                    "19:45", "20:05", "20:25", "20:45", "21:05", "21:25", "21:45", "22:05", "22:15", "22:25"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "北门转盘 → 兰台",
+                        stops: [
+                            { name: "北门转盘", times: ["10:10", "10:40", "11:10", "11:30", "11:50", "12:00", "12:20", "12:30", "12:40", "13:00",
+                                                        "13:10", "13:30", "14:10", "14:30", "14:50", "15:10", "15:30", "15:50", "16:10", "16:40", "17:00", "17:10", 
+                                                        "17:30", "17:40", "17:50", "18:00", "18:10", "18:30", "18:40", "18:50", "19:00", "19:20", 
+                                                        "19:40", "20:00", "20:20", "20:40", "21:00", "21:20", "21:40", "22:00", "22:10", "22:20", "22:30"] }
+                        ]
+                    }
+                }
+            },
+            "5": {
+                name: "兰台2号线",
+                directions: {
+                    "AtoB": {
+                        name: "兰台 → 北门转盘 → 文学院 → 纪忠楼",
+                        stops: [
+                            { name: "兰台", times: ["07:30", "07:40", "09:30", "10:20", "11:10", "13:40", "14:30", "15:30", "16:20", "17:10", "18:40", "19:30", "20:25"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "纪忠楼 → 文学院 → 北门转盘 → 兰台",
+                        stops: [
+                            { name: "商业中心", times: [ "10:50", "11:40", "12:30", "15:00", "15:50", "16:50", "17:40", "18:30", "19:55", "20:50", "21:40"] }
+                        ]
+                    }
+                }
+            }
+        };
+
+        // 节假日班车数据
+        const holidayBusData = {
+            "1": {
+                name: "校内接驳车",
+                directions: {
+                    "AtoB": {
+                        name: "图书馆北 → 东北门",
+                        stops: [
+                            { name: "图书馆北", times: ["08:00", "08:30", "09:00", "09:30", "10:30", "11:30", "12:00", "12:30", "13:00",
+                                                       "13:30", "14:00", "14:30", "15:30", "16:30", "17:00", "17:30", "18:00", "18:30",
+                                                       "19:00", "20:00", "21:00", "22:30", "23:30"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "东北门 → 图书馆北",
+                        stops: [
+                            { name: "东北门", times: ["08:10", "08:40", "09:10", "09:40", "10:10", "11:40", "12:10", "12:40", "13:10",
+                                                     "13:40", "14:10", "14:40", "15:40", "16:40", "17:10", "17:40", "18:10", "18:40",
+                                                     "19:10", "20:40", "21:10", "22:40", "23:40"] }
+                        ]
+                    }
+                }
+            },
+            "2": {
+                name: "无线谷1号线",
+                directions: {
+                    "AtoB": {
+                        name: "橘园 → 无线谷",
+                        stops: [
+                            { name: "橘园", times: ["08:30", "08:40", "08:50", "09:20", "09:30", "11:00", "11:20", "11:40",
+                                                    "12:00", "13:30", "13:40", "14:00", "15:30", "16:00", "16:30", "16:50", 
+                                                    "17:20", "17:40", "18:50", "20:30", "21:00"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "无线谷 → 橘园",
+                        stops: [
+                            { name: "无线谷", times: ["08:40", "08:50", "09:00", "09:30", "09:40", "11:10", "11:30", "11:50",
+                                                    "12:10", "13:40", "13:50", "14:10", "15:40", "16:10", "16:40", "17:00", 
+                                                    "17:30", "17:50", "19:00", "20:40", "21:10", "21:30", "22:10"] }
+                        ]
+                    }
+                }
+            },
+            "3": {
+                name: "无线谷2号线",
+                directions: {
+                    "AtoB": {
+                        name: "北门转盘 → 无线谷",
+                        stops: [
+                            { name: "北门转盘", times: ["08:30", "13:30"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "无线谷 → 北门转盘",
+                        stops: [
+                            { name: "无线谷", times: ["11:50", "21:10", "21:30", "22:10"] }
+                        ]
+                    }
+                }
+            },
+            "4": {
+                name: "兰台1号线",
+                directions: {
+                    "AtoB": {
+                        name: "兰台 → 北门转盘",
+                        stops: [
+                            { name: "兰台", times: ["07:20", "08:00", "08:20", "08:40", "09:00", "09:20", "09:40", "10:00", "10:30", "10:50", "11:10",
+                                                    "11:30", "11:50", "12:10", "12:30", "12:50", "13:00", "13:20", "13:40", "14:00", "14:20", "14:40",
+                                                    "15:00", "15:20", "15:40", "16:00", "16:20", "16:40", "17:00", "17:20", "17:40", "18:00", "18:20",
+                                                    "18:40", "19:00", "19:20", "19:35", "19:55", "20:15", "20:35", "20:55", "21:15", "21:35", "21:55", "22:15", "22:25"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "北门转盘 → 兰台",
+                        stops: [
+                            { name: "北门转盘", times: ["07:30", "07:50", "08:10", "08:30", "08:50", "09:10", "09:30", "09:50", "10:10", "10:40", "11:00", "11:20",
+                                                    "11:40", "12:00", "12:20", "12:40", "12:55", "13:20", "13:30", "13:50", "14:20", "14:30", "14:50",
+                                                    "15:10", "15:30", "15:50", "16:10", "16:30", "16:50", "17:10", "17:30", "17:50", "18:10", "18:30",
+                                                    "18:50", "19:10", "19:30", "19:50", "20:10", "20:30", "20:50", "21:10", "21:30", "21:50", "22:10", "22:20", "22:30"] }
+                        ]
+                    }
+                }
+            },
+            "5": {
+                name: "兰台2号线",
+                directions: {
+                    "AtoB": {
+                        name: "兰台 → 北门转盘 → 文学院 → 纪忠楼",
+                        stops: [
+                            { name: "公司总部", times: ["7:40"] }
+                        ]
+                    },
+                    "BtoA": {
+                        name: "纪忠楼 → 文学院 → 北门转盘 → 兰台",
+                        stops: [
+                            { name: "纪忠楼", times: [] },
+                        ]
+                    }
+                }
+            }
+        };
+
+        // 当前选择的班车
+        let selectedBus = "all";
+        // 当前时刻表类型
+        let currentScheduleType = "auto";
+        // 手动选择的时刻表类型
+        let manualScheduleType = null;
+
+        let scheduleFilter = "all";
+
+        // 判断是否为工作日
+        function isWorkday(date) {
+            const day = date.getDay();
+            // 0是周日，6是周六
+            return day !== 0 && day !== 6;
+        }
+
+        // 获取当前时刻表数据
+        function getCurrentBusData() {
+            let scheduleType = getDisplayScheduleType();
+
+            // 如果是手动选择模式，使用手动选择的时刻表
+            if (currentScheduleType === "auto" && manualScheduleType) {
+                scheduleType = manualScheduleType;
+            }
+
+            return scheduleType === "workday" ? workdayBusData : holidayBusData;
+        }
+
+        // 获取当前显示的时刻表类型
+        function getDisplayScheduleType() {
+            if (currentScheduleType === "auto" && manualScheduleType) {
+                return manualScheduleType;
+            }
+            return currentScheduleType === "auto" ? (isWorkday(new Date()) ? "workday" : "holiday") : currentScheduleType;
+        }
+
+        // 更新当前时间显示和时刻表类型
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('zh-CN', options);
+
+            // 更新首页的当前时间
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            document.getElementById('currentTimeDisplay').textContent = `当前时间: ${now.toLocaleTimeString('zh-CN', timeOptions)}`;
+
+            // 自动模式下根据日期更新时刻表类型
+            // if (currentScheduleType === "auto") {
+            //     const autoScheduleType = isWorkday(now) ? "workday" : "holiday";
+            //     const scheduleTypeElement = document.getElementById('scheduleType');
+            //     scheduleTypeElement.textContent = autoScheduleType === "workday" ? "工作日时刻表" : "节假日时刻表";
+            //     scheduleTypeElement.className = `schedule-type ${autoScheduleType}`;
+            // }
+
+            // 更新时刻表提示
+            updateScheduleNotice();
+
+            return now;
+        }
+
+        function isInTimeRange(startTime, endTime) {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = endHour * 60 + endMinute;
+            
+            return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+}
+
+        // 更新时刻表提示
+        function updateScheduleNotice() {
+            const displayType = getDisplayScheduleType();
+            const scheduleNotice = document.getElementById('scheduleNotice');
+            const scheduleTableNotice = document.getElementById('scheduleTableNotice');
+
+            let noticeText = '';
+            let modeClass = '';
+
+            if (currentScheduleType === "auto" && !manualScheduleType) {
+                if (displayType === "workday") {
+                    noticeText = "工作日校车时刻表";
+                    modeClass = "workday-mode";
+                } else {
+                    noticeText = "节假日校车时刻表";
+                    modeClass = "holiday-mode";
+                }
+            } else {
+                const manualTypeText = manualScheduleType === "workday" ? "工作日" : "节假日";
+                noticeText = `${manualTypeText}校车时刻表`;
+                   if (manualTypeText === "工作日") {
+                        modeClass = "workday-mode";
+                    } else {
+                        modeClass = "holiday-mode";}
+            }
+
+            scheduleNotice.className = `schedule-notice ${modeClass}`;
+            scheduleTableNotice.className = `schedule-notice ${modeClass}`;
+
+            scheduleNotice.textContent = noticeText;
+            scheduleTableNotice.textContent = noticeText;
+        }
+
+        // 计算距离下一个班车的精确时间（毫秒）- 只计算今天
+        function calculateTimeToNextBus(now, busTimes) {
+            const currentTime = now.getTime();
+            let minTimeDiff = Infinity;
+            let nextBusTime = null;
+            let nextnextBusTime = null;
+            let nextBusIndex = -1;
+            let nextnextBus = false;
+            let nextBusDate = null;
+            let allDeparted = true; // 标记是否所有班车都已发车
+
+            // 查找下一个班车（只查找今天的）
+            for (let i = 0; i < busTimes.length; i++) {
+                const [hours, minutes] = busTimes[i].split(':').map(Number);
+
+                // 创建今天的班车时间
+                const busDate = new Date(now);
+                busDate.setHours(hours, minutes, 0, 0);
+
+                const timeDiff = busDate.getTime() - currentTime;
+
+                // 如果班车时间还未到
+                if (timeDiff > 0) {
+                    allDeparted = false;
+                    if (timeDiff < minTimeDiff) {
+                        minTimeDiff = timeDiff;
+                        nextBusTime = busTimes[i];
+                        nextBusIndex = i;
+                        nextBusDate = busDate;
+                        if(i+1<busTimes.length){
+                            nextnextBus=true;
+                            nextnextBusTime=busTimes[i+1];
+                        }
+                    }
+                }
+            }
+
+            // 如果所有班车都已发车
+            if (allDeparted) {
+                return {
+                    timeDiff: -1, // 特殊值表示已过末班车
+                    time: null,
+                    index: -1,
+                    date: null,
+                    allDeparted: true
+                };
+            }
+
+            return {
+                timeDiff: minTimeDiff, // 毫秒
+                time: nextBusTime,
+                nexttime: nextnextBusTime,
+                index: nextBusIndex,
+                nextbus: nextnextBus,
+                date: nextBusDate,
+                allDeparted: false
+            };
+        }
+
+        // 格式化时间差（精确到秒）
+        function formatTimeDiff(milliseconds) {
+            if (milliseconds <= 0) {
+                return "00:00:00";
+            }
+
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            if (hours > 0) {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // 获取详细时间信息
+        function getTimeDetail(milliseconds) {
+            if (milliseconds <= 0) {
+                return "已发车";
+            }
+
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            if (hours > 0) {
+                return `${hours}小时${minutes}分钟${seconds}秒`;
+            } else if (minutes > 0) {
+                return `${minutes}分钟${seconds}秒`;
+            } else {
+                return `${seconds}秒`;
+            }
+        }
+
+        // 获取状态文本
+        function getStatusText(milliseconds, allDeparted) {
+            if (allDeparted) {
+                return { text: "末班车已发", class: "finished" };
+            }
+
+            const minutes = Math.floor(milliseconds / 60000);
+
+            if (milliseconds <= 0) {
+                return { text: "已发车", class: "departed" };
+            } else if (minutes <= 1) {
+                return { text: "即将发车", class: "arriving" };
+            } else if (minutes <= 5) {
+                return { text: "准备发车", class: "waiting" };
+            } else {
+                return { text: "等待发车", class: "" };
+            }
+        }
+
+        // 获取方向状态文本
+        function getDirectionStatusText(milliseconds, allDeparted) {
+            if (allDeparted) {
+                return { text: "已结束", class: "finished" };
+            }
+
+            const minutes = Math.floor(milliseconds / 60000);
+
+            if (milliseconds <= 0) {
+                return { text: "已发车", class: "" };
+            } else if (minutes <= 1) {
+                return { text: "即将发车", class: "arriving" };
+            } else if (minutes <= 5) {
+                return { text: "准备发车", class: "waiting" };
+            } else {
+                return { text: "等待发车", class: "" };
+            }
+        }
+
+        // 格式化时间显示，为高峰期添加特殊样式
+        function formatTimeDisplay(time, busId, dirname,scheduleType) {
+            if (busId === "1" && isPeakTime(time,dirname, scheduleType)) {
+                return `<span class="peak-time">${time}</span>`;
+            }
+            return time;
+        }
+
+        // 显示班车信息
+        function displayBusInfo() {
+            const now = new Date();
+            const nextBusInfo = document.getElementById('nextBusInfo');
+
+            if (selectedBus === "all") {
+                // 显示所有班车信息
+                displayAllBusesInfo(now, nextBusInfo);
+            } else {
+                // 显示单个班车信息
+                displaySingleBusInfo(now, nextBusInfo, selectedBus);
+            }
+        }
+
+        // 显示所有班车信息
+        function displayAllBusesInfo(now, container) {
+            const busData = getCurrentBusData();
+            const displayScheduleType = getDisplayScheduleType();
+            let allFinished = true; // 标记是否所有线路都已结束
+            let html = '';
+
+            // 为每条线路生成卡片
+            for (const busId in busData) {
+                const bus = busData[busId];
+                let routeFinished = true; // 标记该线路是否已结束
+
+                // 检查该线路的两个方向
+                for (const directionKey in bus.directions) {
+                    const direction = bus.directions[directionKey];
+                    const nextBus = calculateTimeToNextBus(now, direction.stops[0].times);
+
+                    // 如果至少有一个方向还有班车，线路就没有结束
+                    if (!nextBus.allDeparted) {
+                        routeFinished = false;
+                        allFinished = false;
+                    }
+                }
+
+                // 如果该线路今天已全部结束
+                if (routeFinished) {
+                    html += `
+                        <div class="route-card route-color-${busId}">
+                            <div class="route-title">
+                                <span>${bus.name}</span>
+                                <span class="route-status finished">今日服务结束</span>
+                            </div>
+                            <div style="text-align: center; color: #7f8c8d; padding: 15px;">
+                                该线路今日校车服务已全部结束
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="route-card route-color-${busId}">
+                            <div class="route-title">
+                                <span>${bus.name}</span>
+                            </div>
+                    `;
+
+                    // 如果是1号线，添加高峰期提示
+                    if (busId === "1" && displayScheduleType==="workday") {
+                        html += `
+                        <div class="peak-notice">
+                            橙色为限行时间
+                        </div>
+                    `;
+                    }
+                    
+
+                    // 显示两个方向
+                    for (const directionKey in bus.directions) {
+                        const direction = bus.directions[directionKey];
+                        const nextBus = calculateTimeToNextBus(now, direction.stops[0].times);
+                        
+                        const status = getDirectionStatusText(nextBus.timeDiff, nextBus.allDeparted);
+
+                        html += `
+                            <div class="direction-section">
+                                <div class="direction-title">
+                                    <span class="direction-route">${direction.name}</span>
+                                    <span class="direction-status ${status.class}">${status.text}</span>
+                                </div>
+                                ${nextBus.allDeparted ? `
+                                    <div style="text-align: center; color: #7f8c8d; padding: 8px;">
+                                        ${busId === "5" && displayScheduleType==="holiday" && direction.name === "纪忠楼 → 文学院 → 北门转盘 → 兰台" ? "今日无校车服务" : "今日校车服务已结束"}
+                                    </div>
+                                ` : `
+                                ${(function() {
+                                    if (busId === "5" && displayScheduleType === "workday" && direction.name === "兰台 → 北门转盘 → 文学院 → 纪忠楼" && isInTimeRange("07:20", "09:40")) {
+                                        return `<div class="time-notice1">7:20至9:40循环发车</div>`;
+                                    } else if(busId === "5" && displayScheduleType==="workday" && direction.name === "纪忠楼 → 文学院 → 北门转盘 → 兰台" && isInTimeRange("07:30", "09:50")) {
+                                        return  `<div class="time-notice1">7:30至9:50循环发车</div>`;
+                                    } else{
+                                        return `<div class="countdown-timer">${formatTimeDiff(nextBus.timeDiff)}</div>`
+                                    }
+                                })()}
+
+
+                                    <div class="route-stops">
+                                        <div class="stop-item">
+                                            <span class="stop-name">
+  
+                                                <span>
+                                                    ${busId === "1" && direction.name === "东北门 → 图书馆北" ? "预计发车时间" : "发车时间"}
+                                                </span>
+                                            </span>
+                                            <span class="stop-time">${formatTimeDisplay(nextBus.time, busId, direction.name,displayScheduleType)}</span>
+                                        </div>
+                                        ${nextBus.nextbus ? `
+                                            <div class="stop-item">
+                                                <span class="stop-name">
+                                          
+                                                    <span>
+                                                        ${busId === "1" && direction.name === "东北门 → 图书馆北" ? "预计下一班发车时间" : "下一班发车时间"}
+                                                    </span>
+                                                </span>
+                                                <span class="stop-time">${formatTimeDisplay(nextBus.nexttime, busId, direction.name, displayScheduleType)}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `}
+                            </div>
+                        `;
+                    }
+
+                    html += `</div>`;
+                }
+            }
+
+            // 如果所有线路今天都已结束
+            if (allFinished) {
+                container.innerHTML = `
+                    <div class="route-card">
+                        <div style="text-align: center; font-size: 20px; font-weight: bold; color: #7f8c8d; padding: 20px;">
+                            今日所有校车服务已结束
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        // 显示单个班车信息
+        function displaySingleBusInfo(now, container, busId) {
+            const busData = getCurrentBusData();
+            const displayScheduleType = getDisplayScheduleType();
+            const bus = busData[busId];
+            if (!bus) {
+                container.innerHTML = '<div class="no-data">校车信息不存在</div>';
+                return;
+            }
+
+            let routeFinished = true;
+            let html = `
+                <div class="route-card route-color-${busId}">
+                    <div class="route-title">
+                        <span>${bus.name}</span>
+                    </div>
+            `;
+
+            if (busId === "1" && displayScheduleType==="workday") {
+                html += `
+                    <div class="peak-notice">
+                        橙色为限行时间
+                    </div>
+                `;
+            }
+
+            // 显示两个方向
+            for (const directionKey in bus.directions) {
+                const direction = bus.directions[directionKey];
+                const nextBus = calculateTimeToNextBus(now, direction.stops[0].times);
+
+                if (!nextBus.allDeparted) {
+                    routeFinished = false;
+                }
+
+
+                const status = getDirectionStatusText(nextBus.timeDiff, nextBus.allDeparted);
+
+                html += `
+                    <div class="direction-section">
+                        <div class="direction-title">
+                            <span class="direction-route">${direction.name}</span>
+                            <span class="direction-status ${status.class}">${status.text}</span>
+                        </div>
+                `;
+
+                if (nextBus.allDeparted) {
+                    html += `
+                        <div style="text-align: center; color: #7f8c8d; padding: 8px;">
+                            今日校车服务已结束
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        ${(function() {
+                            if (busId === "5" && displayScheduleType === "workday" && direction.name === "兰台 → 北门转盘 → 文学院 → 纪忠楼" && isInTimeRange("07:20", "09:40")) {
+                                 return `<div class="time-notice1">7:20至9:40循环发车</div>`;
+                            } else if(busId === "5" && displayScheduleType==="workday" && direction.name === "纪忠楼 → 文学院 → 北门转盘 → 兰台" && isInTimeRange("07:30", "9:50")) {
+                                return  `<div class="time-notice1">7:30至9:50循环发车</div>`;
+                            } else{
+                                return `<div class="countdown-timer">${formatTimeDiff(nextBus.timeDiff)}</div>`
+                            }
+                        })()}
+
+                                    <div class="route-stops">
+                                        <div class="stop-item">
+                                            <span class="stop-name">
+  
+                                                 <span>
+                                                    ${busId === "1" && direction.name === "东北门 → 图书馆北" ? "预计发车时间" : "发车时间"}
+                                                </span>
+                                            </span>
+                                            <span class="stop-time">${formatTimeDisplay(nextBus.time, busId, direction.name, displayScheduleType)}</span>
+                                        </div>
+                                        ${nextBus.nextbus ? `
+                                            <div class="stop-item">
+                                                <span class="stop-name">
+                                          
+                                                    <span>
+                                                        ${busId === "1" && direction.name === "东北门 → 图书馆北" ? "预计下一班发车时间" : "下一班发车时间"}
+                                                    </span>
+                                                </span>
+                                                <span class="stop-time">${formatTimeDisplay(nextBus.nexttime, busId, direction.name, displayScheduleType)}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                    `;
+                }
+
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+
+            // 如果该线路今天已全部结束
+            if (routeFinished) {
+                container.innerHTML = `
+                    <div class="route-card route-color-${busId}">
+                        <div class="route-title">
+                            <span>${bus.name}</span>
+                            <span class="route-status finished">今日服务结束</span>
+                        </div>
+                        <div style="text-align: center; color: #7f8c8d; padding: 20px;">
+                            该线路今日校车服务已全部结束
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        
+
+        // 显示班车时刻表
+        function displaySchedule() {
+            const scheduleList = document.getElementById('scheduleList');
+            const busData = getCurrentBusData();
+            const displayScheduleType = getDisplayScheduleType();
+            let html = '';
+
+            for (const busId in busData) {
+
+                if (scheduleFilter !== "all" && busId !== scheduleFilter) {
+                    continue;
+                }
+                const bus = busData[busId];
+                html += `
+                    <div class="route-card route-color-${busId}">
+                        <div class="route-title">
+                            <span>${bus.name}</span>
+                        </div>
+                `;
+
+                       // 如果是1号线，添加高峰期提示
+                if (busId === "1" && displayScheduleType==="workday") {
+                    html += `
+                        <div class="peak-notice">
+                            橙色为限行时间
+                        </div>
+                    `;
+                }
+
+                // 显示两个方向的时刻表
+                for (const directionKey in bus.directions) {
+                    const direction = bus.directions[directionKey];
+                    html += `
+                    <div class="direction-section">
+                        <div class="direction-title">
+                            <span class="direction-route">${direction.name}</span>
+                        </div>
+                        ${busId === "5" && displayScheduleType==="workday" && direction.name === "兰台 → 北门转盘 → 文学院 → 纪忠楼" ? 
+                            `<div class="time-notice2">7:20至9:40循环发车</div>` 
+                            : ''}
+                        ${busId === "5" && displayScheduleType==="workday" && direction.name === "纪忠楼 → 文学院 → 北门转盘 → 兰台" ? 
+                            `<div class="time-notice2">7:30至9:50循环发车</div>` 
+                            : ''}
+                        <div class="route-stops">
+                            <div class="stop-item">
+                                <span class="stop-name">
+                                    <span>
+                                        ${busId === "1" && direction.name === "东北门 → 图书馆北" ? "预计发车时间" : "发车时间"}
+                                    </span>
+                                </span>
+                                <div class="stop-times-container">
+                                    ${direction.stops[0].times.map(time =>
+                                    `<span class="time-bubble">${formatTimeDisplay(time, busId, direction.name, displayScheduleType)}</span>`
+                                ).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }
+
+                html += `</div>`;
+            }
+
+            scheduleList.innerHTML = html;
+        }
+
+        // 初始化班车选择器
+        function initializeBusSelector() {
+            const busOptions = document.querySelectorAll('.bus-option');
+
+            busOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    // 移除所有活动状态
+                    busOptions.forEach(opt => opt.classList.remove('active'));
+
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    selectedBus = this.getAttribute('data-bus');
+
+                    // 刷新显示
+                    displayBusInfo();
+                });
+            });
+        }
+
+        // 更新所有页面的时刻表选择器状态
+        function updateAllScheduleSelectors() {
+            const allSelectors = document.querySelectorAll('.schedule-selector');
+            const activeSchedule = manualScheduleType || (currentScheduleType === "auto" ? "auto" : currentScheduleType);
+            
+            allSelectors.forEach(selector => {
+                const options = selector.querySelectorAll('.schedule-option');
+                options.forEach(option => {
+                    option.classList.remove('active');
+                    if (option.getAttribute('data-schedule') === activeSchedule) {
+                        option.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // 初始化时刻表选择器
+        function initializeScheduleSelector() {
+            const scheduleOptions = document.querySelectorAll('.schedule-option');
+
+            scheduleOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    const scheduleType = this.getAttribute('data-schedule');
+
+                    if (scheduleType === "auto") {
+                        // 自动模式
+                        currentScheduleType = "auto";
+                        manualScheduleType = null;
+                    } else {
+                        // 手动选择模式
+                        currentScheduleType = "auto"; // 保持自动模式，但使用手动选择
+                        manualScheduleType = scheduleType;
+                    }
+
+                    // 更新选择器状态
+                    scheduleOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+
+                    updateAllScheduleSelectors();
+
+                    // 更新提示信息
+                    updateScheduleNotice();
+
+                    // 刷新显示
+                    displayBusInfo();
+                    displaySchedule();
+                });
+            });
+        }
+
+              // 初始化时刻表筛选器
+        function initializeScheduleFilter() {
+            const filterOptions = document.querySelectorAll('.filter-option');
+
+            filterOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    // 移除所有活动状态
+                    filterOptions.forEach(opt => opt.classList.remove('active'));
+
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    scheduleFilter = this.getAttribute('data-filter');
+
+                    // 刷新显示
+                    displaySchedule();
+                });
+            });
+        }
+
+        // 页面切换功能
+        function initializeNavigation() {
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const pages = document.querySelectorAll('.page');
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // 移除所有活动状态
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+
+                    updateAllScheduleSelectors();
+
+                    // 如果切换到时刻表页面，刷新显示
+                    if (pageId === 'schedule') {
+                        displaySchedule();
+                    }
+                });
+            });
+        }
+
+        // 初始化应用
+        function initializeApp() {
+            initializeNavigation();
+            initializeBusSelector();
+            initializeScheduleSelector();
+            initializeScheduleFilter();
+
+            // 初始显示
+            updateTime();
+            displayBusInfo();
+            displaySchedule();
+
+
+            // 每秒更新时间和班车信息
+            setInterval(() => {
+                updateTime();
+                
+                // 刷新条件：
+                // 1. 在首页
+                // 2. 不是所有班车都已结束（避免不必要的刷新）
+                const homePage = document.getElementById('home');
+                if (homePage.classList.contains('active')) {
+                    displayBusInfo();
+                }
+            }, 1000);
+            // 绑定按钮事件
+            document.getElementById('refreshBtn').addEventListener('click', displayBusInfo);
+        }
+
+        // 启动应用
+        initializeApp();
+    </script>
+</body>
+
+</html>
